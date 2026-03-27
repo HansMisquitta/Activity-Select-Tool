@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activity Selection — Interactive Teaching Tool</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#0d0f14;--bg2:#13151c;--bg3:#1a1d27;--bg4:#222636;--border:#2a2f45;
+  --text:#e2e6f0;--text2:#8890aa;--text3:#555e7a;
+  --accent:#4f9eff;--accent2:#7c6cff;
+  --green:#3ddc84;--green2:#1a5c3a;
+  --red:#ff5c5c;--red2:#3a1212;
+  --yellow:#ffc94f;--yellow2:#3a2a00;
+  --purple:#c084fc;--cyan:#22d3ee;--orange:#ff8a4f;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+/* HEADER */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;flex-wrap:wrap;}
+.logo{font-size:1.1rem;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;}
+.badge{background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:.62rem;font-family:var(--mono);color:var(--text2);letter-spacing:1px;white-space:nowrap;}
+.tabs{margin-left:auto;display:flex;gap:3px;flex-wrap:wrap;}
+.tab{background:none;border:1px solid transparent;border-radius:6px;color:var(--text2);cursor:pointer;font-family:var(--sans);font-size:.7rem;font-weight:600;padding:4px 10px;transition:all .2s;}
+.tab:hover{color:var(--text);border-color:var(--border);}
+.tab.active{background:var(--bg4);color:var(--accent);border-color:var(--accent);}
+.narrate-btn{background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-family:var(--mono);font-size:.62rem;padding:4px 8px;transition:all .2s;white-space:nowrap;}
+.narrate-btn.on{border-color:var(--purple);color:var(--purple);}
+
+/* LAYOUT */
+.main-layout{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 52px);}
+@media(max-width:980px){.main-layout{grid-template-columns:1fr;}}
+
+/* LEFT PANEL */
+.left-panel{background:var(--bg2);border-right:1px solid var(--border);padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.panel-section{background:var(--bg3);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.pst{background:var(--bg4);border-bottom:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:1.5px;padding:6px 12px;text-transform:uppercase;}
+.psb{padding:10px;}
+.input-row{display:flex;flex-direction:column;gap:3px;margin-bottom:7px;}
+label{font-size:.69rem;color:var(--text2);font-weight:600;}
+textarea,input[type=text]{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:.69rem;padding:6px 8px;resize:vertical;width:100%;transition:border-color .2s;}
+textarea:focus,input[type=text]:focus{border-color:var(--accent);outline:none;}
+textarea{min-height:60px;}
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px;}
+.preset-btn{background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-family:var(--sans);font-size:.66rem;font-weight:600;padding:5px 8px;text-align:left;transition:all .2s;position:relative;}
+.preset-btn:hover{border-color:var(--accent);color:var(--accent);}
+.preset-btn span{display:block;font-size:.57rem;color:var(--text3);margin-top:1px;font-family:var(--mono);font-weight:400;}
+.preset-preview{display:none;position:absolute;left:105%;top:0;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:6px;z-index:300;pointer-events:none;width:180px;box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.preset-btn:hover .preset-preview{display:block;}
+.speed-row{display:flex;align-items:center;gap:7px;}
+input[type=range]{-webkit-appearance:none;flex:1;height:4px;background:var(--bg4);border-radius:2px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--accent);border-radius:50%;cursor:pointer;}
+.speed-val{background:var(--bg4);border:1px solid var(--border);border-radius:4px;color:var(--accent);font-family:var(--mono);font-size:.66rem;font-weight:600;padding:2px 6px;min-width:36px;text-align:center;}
+.playback-row{display:flex;gap:5px;flex-wrap:wrap;}
+.btn{background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-family:var(--sans);font-size:.7rem;font-weight:700;padding:6px 10px;transition:all .18s;display:flex;align-items:center;gap:4px;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn.primary:hover{background:#3a8af0;}
+.btn.danger{background:var(--red2);border-color:var(--red);color:var(--red);}
+.btn.success{background:var(--green2);border-color:var(--green);color:var(--green);}
+.step-info{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.step-counter{font-family:var(--mono);font-size:.7rem;color:var(--text2);}
+.status-badge{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:1px;padding:2px 9px;border-radius:20px;border:1px solid;text-transform:uppercase;}
+.status-idle{color:var(--text3);border-color:var(--text3);}
+.status-ready{color:var(--yellow);border-color:var(--yellow);}
+.status-playing{color:var(--green);border-color:var(--green);}
+.status-paused{color:var(--orange);border-color:var(--orange);}
+.status-done{color:var(--purple);border-color:var(--purple);}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.stat-card{background:var(--bg4);border:1px solid var(--border);border-radius:7px;padding:8px 10px;}
+.stat-label{font-size:.6rem;color:var(--text3);font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;}
+.stat-val{font-size:1.3rem;font-weight:800;color:var(--accent);margin-top:1px;}
+.stat-theory{font-size:.58rem;color:var(--text3);font-family:var(--mono);margin-top:1px;}
+.explanation-box{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;font-size:.75rem;line-height:1.6;padding:8px 10px;color:var(--text2);min-height:48px;transition:all .2s;}
+.explanation-box strong{color:var(--accent);}
+.explanation-box .val{color:var(--yellow);font-family:var(--mono);}
+
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;overflow:hidden;}
+.tab-content{display:none;flex:1;overflow:hidden;}
+.tab-content.active{display:flex;flex-direction:column;}
+.viz-area{flex:1;padding:18px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--text2);}
+.legend-dot{width:11px;height:11px;border-radius:3px;}
+
+/* CONTAINERS */
+.viz-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.viz-card-title{background:var(--bg4);border-bottom:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:.62rem;letter-spacing:1.5px;padding:7px 13px;text-transform:uppercase;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.viz-card-body{padding:14px;}
+
+/* GANTT */
+#gantt-svg{width:100%;overflow:visible;}
+
+/* SORT BARS */
+#sort-bars-svg{width:100%;overflow:visible;}
+
+/* PSEUDO */
+.pseudo-body{max-height:230px;overflow-y:auto;padding:8px 0;scroll-behavior:smooth;}
+.pseudo-line{align-items:center;cursor:default;display:flex;font-family:var(--mono);font-size:.72rem;gap:8px;padding:3px 12px;position:relative;transition:background .2s;}
+.pseudo-line:hover{background:var(--bg4);}
+.pseudo-line.active{background:rgba(79,158,255,.15);border-left:2px solid var(--accent);}
+.pseudo-line .ln{color:var(--text3);min-width:18px;text-align:right;font-size:.64rem;}
+.pseudo-line .code{color:var(--text);}
+.pseudo-line .code .kw{color:var(--purple);}
+.pseudo-line .code .fn{color:var(--cyan);}
+.pseudo-line .code .cm{color:var(--text3);}
+.pseudo-tooltip{display:none;position:absolute;left:100%;top:50%;transform:translateY(-50%);background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:.66rem;line-height:1.5;max-width:210px;padding:6px 9px;white-space:normal;z-index:50;pointer-events:none;margin-left:6px;}
+.pseudo-line:hover .pseudo-tooltip{display:block;}
+
+/* HISTORY */
+.history-table-wrap{max-height:180px;overflow-y:auto;}
+.history-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.67rem;}
+.history-table th{background:var(--bg3);color:var(--text3);padding:4px 8px;text-align:left;font-weight:600;letter-spacing:.5px;position:sticky;top:0;}
+.history-table td{border-top:1px solid var(--border);color:var(--text2);padding:4px 8px;cursor:pointer;transition:background .15s;}
+.history-table tr:hover td{background:var(--bg4);}
+.history-table tr.cur td{background:rgba(79,158,255,.1);color:var(--accent);}
+.cell-sel{color:var(--green) !important;}
+.cell-rej{color:var(--red) !important;}
+
+/* CLO AREA */
+.clo-area{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;}
+.clo-section{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.clo-hdr{background:var(--bg3);border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;user-select:none;}
+.clo-hdr h3{font-size:.84rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.clo-badge{background:var(--accent);border-radius:4px;color:#fff;font-family:var(--mono);font-size:.6rem;font-weight:700;padding:2px 7px;}
+.clo-body{padding:14px;display:none;}
+.clo-section.open .clo-body{display:block;}
+.chevron{transition:transform .2s;color:var(--text3);font-size:.75rem;}
+.clo-section.open .chevron{transform:rotate(90deg);}
+
+/* TABLES */
+.data-table{width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:10px;}
+.data-table th{background:var(--bg4);color:var(--text2);padding:5px 10px;text-align:left;font-family:var(--mono);font-size:.65rem;letter-spacing:.5px;}
+.data-table td{border-top:1px solid var(--border);color:var(--text);padding:6px 10px;font-family:var(--mono);}
+.data-table .hl{color:var(--yellow);font-weight:700;}
+.data-table .sel{background:rgba(61,220,132,.1);color:var(--green);}
+.data-table .rej{background:rgba(255,92,92,.07);color:var(--red);}
+
+/* CONCEPT BOXES */
+.cbox{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:6px;margin-bottom:8px;padding:9px 12px;font-size:.75rem;line-height:1.6;color:var(--text2);}
+.cbox h4{color:var(--purple);margin-bottom:3px;font-size:.77rem;}
+.cbox.warn{border-left-color:var(--yellow);}
+.cbox.warn h4{color:var(--yellow);}
+.cbox.good{border-left-color:var(--green);}
+.cbox.good h4{color:var(--green);}
+.cbox.accent{border-left-color:var(--accent);}
+.cbox.accent h4{color:var(--accent);}
+
+/* OVERVIEW TEXT */
+.otext{font-size:.78rem;line-height:1.75;color:var(--text2);}
+.otext h4{color:var(--text);font-size:.84rem;margin:10px 0 3px;}
+.otext code{background:var(--bg4);border-radius:3px;color:var(--cyan);font-family:var(--mono);font-size:.7rem;padding:1px 5px;}
+
+/* GROWTH CONTROLS */
+.growth-controls{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+#growth-svg{width:100%;border-radius:6px;overflow:visible;}
+
+/* IMPACT DEMO */
+.demo-btns{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+#impact-svg{width:100%;}
+
+/* CONFLICT HEATMAP */
+#heatmap-svg{width:100%;overflow:visible;}
+
+/* WHAT-IF WIDGET */
+.whatif-acts{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.whatif-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s;font-family:var(--mono);font-size:.72rem;}
+.whatif-row:hover{border-color:var(--accent);}
+.whatif-row.forced{border-color:var(--orange);background:rgba(255,138,79,.1);}
+.whatif-row.greedy-choice{border-color:var(--green);background:rgba(61,220,132,.08);}
+#whatif-result-svg{width:100%;}
+#whatif-explanation{margin-top:8px;}
+
+/* SWAP SVG */
+#swap-svg{width:100%;}
+#counter-svg{width:100%;}
+
+/* SORT INDICATOR */
+.sort-indicator{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.66rem;color:var(--text2);flex-wrap:wrap;}
+.sort-arrow{color:var(--yellow);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--border);}
+
+/* MODAL (download) */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:360px;width:90%;}
+.modal h3{font-size:.9rem;margin-bottom:12px;}
+.modal p{font-size:.75rem;color:var(--text2);line-height:1.6;margin-bottom:14px;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .25s ease;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulsing{animation:pulse 1s infinite;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ActivitySelect</div>
+  <div class="badge">GREEDY · O(n log n)</div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('visualizer')">Visualizer</button>
+    <button class="tab" onclick="switchTab('clo1')">Complexity</button>
+    <button class="tab" onclick="switchTab('clo2')">Sorting</button>
+    <button class="tab" onclick="switchTab('clo3')">Greedy</button>
+    <button class="tab" onclick="switchTab('overview')">Overview</button>
+  </div>
+  <button class="narrate-btn" id="narrate-btn" onclick="toggleNarrate()" title="Toggle voice narration (Web Speech API)">🔊 Narrate</button>
+</header>
+
+<div class="main-layout">
+<!-- ===== LEFT PANEL ===== -->
+<div class="left-panel">
+
+  <div class="panel-section">
+    <div class="pst">Custom Input</div>
+    <div class="psb">
+      <div class="input-row">
+        <label>Activities — name, start, finish (one per line)</label>
+        <textarea id="custom-input">A, 1, 4
+B, 3, 5
+C, 0, 6
+D, 5, 7
+E, 3, 9
+F, 5, 9
+G, 6, 10
+H, 8, 11
+I, 8, 12
+J, 2, 14
+K, 12, 16</textarea>
+      </div>
+      <button class="btn primary" onclick="loadCustom()" style="width:100%">▶ Load Input</button>
+      <div style="margin-top:9px;font-size:.68rem;color:var(--text2);font-weight:700;margin-bottom:5px;">PRESET EXAMPLES</div>
+      <div class="preset-grid" id="preset-grid">
+        <!-- filled by JS with previews -->
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="pst">Animation Speed</div>
+    <div class="psb">
+      <div class="speed-row">
+        <span style="font-size:.67rem;color:var(--text3)">0.25×</span>
+        <input type="range" id="speed-slider" min="1" max="8" value="4" oninput="updateSpeed()">
+        <span style="font-size:.67rem;color:var(--text3)">4×</span>
+        <div class="speed-val" id="speed-display">1×</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="pst">Playback Controls</div>
+    <div class="psb">
+      <div class="playback-row">
+        <button class="btn" id="btn-build" onclick="buildSteps()">⚙ Build</button>
+        <button class="btn" id="btn-step" onclick="stepForward()" disabled>▶ Step</button>
+        <button class="btn primary" id="btn-play" onclick="playAnim()" disabled>▶ Play</button>
+        <button class="btn" id="btn-pause" onclick="pauseAnim()" disabled>⏸ Pause</button>
+        <button class="btn danger" id="btn-reset" onclick="resetAnim()" disabled>↺ Reset</button>
+      </div>
+      <div class="step-info">
+        <span class="step-counter" id="step-counter">Step 0 / 0</span>
+        <span class="status-badge status-idle" id="status-badge">Idle</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="pst">Live Statistics</div>
+    <div class="psb">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Comparisons</div>
+          <div class="stat-val" id="stat-comparisons">0</div>
+          <div class="stat-theory" id="stat-theory-cmp"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Swaps (sort)</div>
+          <div class="stat-val" id="stat-swaps">0</div>
+          <div class="stat-theory" id="stat-theory-swp"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Selected</div>
+          <div class="stat-val" id="stat-selected" style="color:var(--green)">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-val" id="stat-rejected" style="color:var(--red)">0</div>
+        </div>
+      </div>
+      <div id="theory-match" style="margin-top:7px;font-size:.66rem;font-family:var(--mono);color:var(--text3);display:none;"></div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="pst">Step Explanation</div>
+    <div class="psb">
+      <div class="explanation-box" id="explanation-box">Load activities and press <strong>Build</strong> to begin.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== RIGHT PANEL ===== -->
+<div class="right-panel">
+
+<!-- VISUALIZER TAB -->
+<div class="tab-content active" id="tab-visualizer">
+<div class="viz-area">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#3a3f55"></div>Pending</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Comparing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Candidate</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Selected ✓</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Rejected ✗</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Last Selected</div>
+  </div>
+
+  <!-- Sort bars -->
+  <div class="viz-card" id="sort-bars-card">
+    <div class="viz-card-title">
+      <span>Phase 1 — Sort by Finish Time (Insertion Sort Visualization)</span>
+      <span id="sort-phase-label" style="color:var(--yellow);font-size:.6rem"></span>
+    </div>
+    <div class="viz-card-body" style="padding:10px 14px;">
+      <svg id="sort-bars-svg" height="90"></svg>
+    </div>
+  </div>
+
+  <!-- Gantt -->
+  <div class="viz-card">
+    <div class="viz-card-title">
+      <span>Phase 2 — Greedy Selection (Gantt / Timeline)</span>
+      <div class="sort-indicator" id="sort-indicator"></div>
+    </div>
+    <div class="viz-card-body" style="padding:10px 14px;">
+      <svg id="gantt-svg" height="320"></svg>
+    </div>
+  </div>
+
+  <!-- Pseudocode -->
+  <div class="viz-card">
+    <div class="viz-card-title">Pseudocode — Activity-Selection-Greedy</div>
+    <div class="pseudo-body" id="pseudo-body"></div>
+  </div>
+
+  <!-- History -->
+  <div class="viz-card">
+    <div class="viz-card-title">Step History <span style="color:var(--text3);font-size:.58rem;margin-left:6px">(click row to jump back)</span></div>
+    <div class="history-table-wrap">
+      <table class="history-table" id="history-table">
+        <thead><tr><th>#</th><th>Action</th><th>Activity</th><th>Decision</th><th>Selected So Far</th></tr></thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- CLO-1 TAB -->
+<div class="tab-content" id="tab-clo1">
+<div class="clo-area">
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-1</span> Time &amp; Space Complexity</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <table class="data-table">
+        <thead><tr><th>Case</th><th>Sort Step</th><th>Greedy Scan</th><th>Total</th></tr></thead>
+        <tbody>
+          <tr><td>Best</td><td>O(n log n)</td><td>O(n)</td><td class="hl">O(n log n)</td></tr>
+          <tr><td>Average</td><td>O(n log n)</td><td>O(n)</td><td class="hl">O(n log n)</td></tr>
+          <tr><td>Worst</td><td>O(n log n)</td><td>O(n)</td><td class="hl">O(n log n)</td></tr>
+          <tr><td>Space</td><td colspan="3">O(n) — store sorted order</td></tr>
+        </tbody>
+      </table>
+      <div class="cbox"><h4>Why O(n log n)?</h4>Sorting dominates: O(n log n) + O(n) = O(n log n). The greedy scan is always linear — it never revisits activities.</div>
+    </div>
+  </div>
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-1</span> Growth Curve — Actual vs Theoretical</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="growth-controls">
+        <label>Max n:</label>
+        <input type="range" id="growth-n" min="10" max="500" value="100" style="width:120px" oninput="drawGrowth()">
+        <span id="growth-n-val" style="font-family:var(--mono);font-size:.72rem;color:var(--accent)">100</span>
+        <label style="margin-left:8px">Compare:</label>
+        <select id="growth-compare" onchange="drawGrowth()" style="background:var(--bg4);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 7px;font-family:var(--mono);font-size:.68rem;">
+          <option value="n2">Brute Force O(n²)</option>
+          <option value="n">Linear O(n)</option>
+          <option value="2n">Exponential O(2ⁿ)</option>
+        </select>
+      </div>
+      <svg id="growth-svg" height="240"></svg>
+      <div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div><span style="font-size:.68rem;color:var(--text2)">Activity Selection O(n log n)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div><span style="font-size:.68rem;color:var(--text2)">Comparison Algorithm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-1</span> Counter vs Theory Verification</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="cbox accent"><h4>Run the animation to see live verification</h4>After running, the statistics panel shows: actual comparisons vs theoretical n·log₂(n), and whether they match within expected bounds.</div>
+      <table class="data-table">
+        <thead><tr><th>n</th><th>Sort Cmps ≈ n·log₂n</th><th>Greedy Checks = n</th><th>Total</th></tr></thead>
+        <tbody id="ops-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- CLO-2 TAB -->
+<div class="tab-content" id="tab-clo2">
+<div class="clo-area">
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-2</span> Why Sorting is the Critical First Step</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="otext">
+        <h4>The Role of Sorting</h4>
+        <p>The greedy algorithm's correctness hinges on processing activities in <strong>non-decreasing order of finish time</strong>. Without sorting, the greedy choice at each step may not be globally optimal.</p>
+      </div>
+      <div class="cbox good" style="margin-top:8px"><h4>✓ Sort by Finish Time → Always Optimal</h4>Guarantees the Greedy-Choice Property: the locally optimal pick leaves maximum room for future activities.</div>
+      <div class="cbox warn"><h4>⚠ Any Other Sort → Sub-optimal or Wrong</h4>Sorting by start time, duration, or random order can miss the optimal solution — demonstrated below.</div>
+    </div>
+  </div>
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-2</span> Impact Demo — 4 Strategies Side by Side</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="demo-btns">
+        <button class="btn success" onclick="runImpact('finish')">Sort by Finish ✓</button>
+        <button class="btn" onclick="runImpact('start')">Sort by Start ✗</button>
+        <button class="btn" onclick="runImpact('duration')">Sort by Duration ✗</button>
+        <button class="btn" onclick="runImpact('none')">No Sort ✗</button>
+      </div>
+      <svg id="impact-svg" width="100%" height="260"></svg>
+      <div id="impact-explanation" class="explanation-box" style="margin-top:8px">Click a strategy above to see how sort order affects the result.</div>
+    </div>
+  </div>
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-2</span> Conflict Heatmap — Which Activities Clash?</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="otext" style="margin-bottom:8px">Each cell shows whether two activities conflict (overlap). Red = conflict, Green = compatible. This explains visually why the greedy algorithm rejects certain activities.</div>
+      <svg id="heatmap-svg" height="280"></svg>
+      <div style="display:flex;gap:14px;margin-top:6px">
+        <div class="legend-item"><div class="legend-dot" style="background:#3a1212"></div><span style="font-size:.68rem;color:var(--text2)">Conflict (overlap)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a3a1a"></div><span style="font-size:.68rem;color:var(--text2)">Compatible</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- CLO-3 TAB -->
+<div class="tab-content" id="tab-clo3">
+<div class="clo-area">
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-3</span> Greedy Paradigm — How It Works</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="cbox good"><h4>✓ Paradigm: GREEDY</h4>At each step, pick the unscheduled activity with the <em>earliest finish time</em> that doesn't conflict. This local optimum is provably globally optimal.</div>
+      <div class="cbox"><h4>Two Properties That Make Greedy Work</h4>
+        <p><strong>1. Greedy-Choice Property:</strong> A globally optimal solution can always include the greedy first choice (earliest finish). Proven by the exchange argument below.</p>
+        <p style="margin-top:5px"><strong>2. Optimal Substructure:</strong> After selecting the first activity, the remaining subproblem (compatible activities) has the same structure — apply greedy again.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-3</span> The Exchange / Swapping Argument</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <svg id="swap-svg" height="220"></svg>
+      <div class="cbox warn" style="margin-top:10px"><h4>Formal Proof Sketch</h4>Let A* be optimal with first activity a₁'. Let a₁ be greedy (earliest finish). Since f(a₁) ≤ f(a₁'), replacing a₁' with a₁ in A* still yields a valid solution of the same size → greedy is never worse.</div>
+    </div>
+  </div>
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-3</span> ★ What If You Picked Differently? (Interactive)</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="otext" style="margin-bottom:8px">
+        <strong style="color:var(--orange)">Force a non-greedy first choice</strong> and watch the solution get worse. Click any activity below to force it as the first selection, then compare with the greedy result.
+      </div>
+      <div id="whatif-acts" class="whatif-acts"></div>
+      <svg id="whatif-result-svg" height="200"></svg>
+      <div id="whatif-explanation" class="explanation-box">Click an activity above to force it as the first pick.</div>
+    </div>
+  </div>
+
+  <div class="clo-section">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3><span class="clo-badge">CLO-3</span> Counterexample — Sort by Start Fails</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <svg id="counter-svg" width="100%" height="200"></svg>
+      <div class="cbox warn" style="margin-top:8px"><h4>Why Other Paradigms / Sort Orders Fail</h4>
+        A[1,10], B[2,3], C[4,5]: Sort by start → greedy picks A first (starts earliest), blocks B and C → only 1 selected. Sort by finish → picks B, C → 2 selected (optimal). The greedy choice property only holds when sorted by <em>finish</em> time.
+      </div>
+      <div class="cbox"><h4>Why Not Dynamic Programming?</h4>DP also finds the optimum but costs O(n²) for naive weighted interval scheduling. Since all weights are equal, greedy dominates: simpler code, O(n log n) time.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- OVERVIEW TAB -->
+<div class="tab-content" id="tab-overview">
+<div class="clo-area">
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3>What is the Activity Selection Problem?</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="otext">
+        <h4>Problem Statement</h4>
+        <p>Given <em>n</em> activities each with start time <code>sᵢ</code> and finish time <code>fᵢ</code>, select the <strong>maximum number of non-overlapping activities</strong>.</p>
+        <h4>Compatibility</h4>
+        <p>Activities i and j are compatible if <code>fᵢ ≤ sⱼ</code> or <code>fⱼ ≤ sᵢ</code>.</p>
+        <h4>Algorithm Steps</h4>
+        <p>1. Sort by finish time — O(n log n)<br>2. Select first activity<br>3. For each remaining activity: if it starts at or after the last selected activity's finish time, select it<br>4. Return selected set</p>
+        <h4>Reference</h4>
+        <p>Cormen et al., <em>Introduction to Algorithms</em>, 4th ed., Ch. 16.1 — "An activity-selection problem"</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="clo-section open">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3>Fully Worked Example (CLRS Classic, n=11)</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <table class="data-table">
+        <thead><tr><th>Activity</th><th>Start</th><th>Finish</th><th>Status</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr class="sel"><td>A</td><td>1</td><td>4</td><td>✓ Selected</td><td>Earliest finish — always pick first</td></tr>
+          <tr class="rej"><td>B</td><td>3</td><td>5</td><td>✗ Rejected</td><td>start 3 &lt; lastFinish 4 — overlaps A</td></tr>
+          <tr class="rej"><td>C</td><td>0</td><td>6</td><td>✗ Rejected</td><td>start 0 &lt; lastFinish 4 — overlaps A</td></tr>
+          <tr class="sel"><td>D</td><td>5</td><td>7</td><td>✓ Selected</td><td>start 5 ≥ lastFinish 4 — compatible</td></tr>
+          <tr class="rej"><td>E</td><td>3</td><td>9</td><td>✗ Rejected</td><td>start 3 &lt; lastFinish 7</td></tr>
+          <tr class="rej"><td>F</td><td>5</td><td>9</td><td>✗ Rejected</td><td>start 5 &lt; lastFinish 7</td></tr>
+          <tr class="rej"><td>G</td><td>6</td><td>10</td><td>✗ Rejected</td><td>start 6 &lt; lastFinish 7</td></tr>
+          <tr class="sel"><td>H</td><td>8</td><td>11</td><td>✓ Selected</td><td>start 8 ≥ lastFinish 7 — compatible</td></tr>
+          <tr class="rej"><td>I</td><td>8</td><td>12</td><td>✗ Rejected</td><td>start 8 &lt; lastFinish 11</td></tr>
+          <tr class="rej"><td>J</td><td>2</td><td>14</td><td>✗ Rejected</td><td>start 2 &lt; lastFinish 11</td></tr>
+          <tr class="sel"><td>K</td><td>12</td><td>16</td><td>✓ Selected</td><td>start 12 ≥ lastFinish 11 — compatible</td></tr>
+        </tbody>
+      </table>
+      <div class="cbox good"><h4>Result: {A, D, H, K} — 4 activities (optimal)</h4>Matches CLRS Chapter 16.1 exactly.</div>
+    </div>
+  </div>
+
+  <div class="clo-section">
+    <div class="clo-hdr" onclick="toggleSec(this)"><h3>Key Concepts &amp; Common Mistakes</h3><span class="chevron">▶</span></div>
+    <div class="clo-body">
+      <div class="cbox good"><h4>✓ Sort by Finish Time Always</h4>The single most important rule. Everything else follows.</div>
+      <div class="cbox warn"><h4>⚠ Mistake: Sort by Start Time</h4>Example: A[1,10], B[2,3], C[4,5]. Sort by start → picks A → blocks everything → 1 selected. Sort by finish → picks B, C → 2 selected.</div>
+      <div class="cbox warn"><h4>⚠ Mistake: Sort by Duration (Shortest First)</h4>Counter: B[0,3], A[2,4], C[3,6]. Durations: A=2, B=3, C=3. Picks A (shortest), but A conflicts with both B and C → 1. Greedy-by-finish picks B then C → 2.</div>
+      <div class="cbox"><h4>💡 Ties in Finish Time</h4>If two activities share the same finish time, both choices lead to equally valid solutions. Tiebreak by start time for consistency.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</div><!-- right panel -->
+</div><!-- main layout -->
+
+<script>
+// =====================================================================
+// PRESETS
+// =====================================================================
+const PRESETS = [
+  { name:'Classic CLRS', desc:'Textbook n=11', activities:[
+    {name:'A',start:1,finish:4},{name:'B',start:3,finish:5},{name:'C',start:0,finish:6},
+    {name:'D',start:5,finish:7},{name:'E',start:3,finish:9},{name:'F',start:5,finish:9},
+    {name:'G',start:6,finish:10},{name:'H',start:8,finish:11},{name:'I',start:8,finish:12},
+    {name:'J',start:2,finish:14},{name:'K',start:12,finish:16}
+  ]},
+  { name:'Worst Case', desc:'All overlap heavily', activities:[
+    {name:'A',start:0,finish:10},{name:'B',start:1,finish:9},{name:'C',start:2,finish:8},
+    {name:'D',start:3,finish:7},{name:'E',start:4,finish:6},{name:'F',start:5,finish:11},
+    {name:'G',start:0,finish:12}
+  ]},
+  { name:'Best Case', desc:'No conflicts at all', activities:[
+    {name:'A',start:0,finish:2},{name:'B',start:2,finish:4},{name:'C',start:4,finish:6},
+    {name:'D',start:6,finish:8},{name:'E',start:8,finish:10},{name:'F',start:10,finish:12}
+  ]},
+  { name:'Busy Day', desc:'Many conflicts n=8', activities:[
+    {name:'A',start:8,finish:10},{name:'B',start:9,finish:11},{name:'C',start:10,finish:13},
+    {name:'D',start:9,finish:12},{name:'E',start:13,finish:15},{name:'F',start:11,finish:14},
+    {name:'G',start:15,finish:17},{name:'H',start:14,finish:16}
+  ]},
+  { name:'Unsorted Demo', desc:'Shows sort necessity', activities:[
+    {name:'C',start:4,finish:9},{name:'A',start:1,finish:3},{name:'D',start:7,finish:11},
+    {name:'B',start:2,finish:5},{name:'E',start:10,finish:13}
+  ]},
+  { name:'Ties in Finish', desc:'Equal finish times', activities:[
+    {name:'A',start:1,finish:5},{name:'B',start:2,finish:5},{name:'C',start:4,finish:8},
+    {name:'D',start:6,finish:9},{name:'E',start:5,finish:9}
+  ]}
+];
+
+// =====================================================================
+// PSEUDOCODE
+// =====================================================================
+const PSEUDOCODE = [
+  {code:'<span class="kw">function</span> <span class="fn">ActivitySelection</span>(A[1..n]):', tip:'Entry point: takes array of n activities'},
+  {code:'  <span class="kw">sort</span> A <span class="kw">by</span> finish time <span class="cm">// O(n log n) — critical!</span>', tip:'Sort all activities by non-decreasing finish time. This is the KEY step that makes greedy work.'},
+  {code:'  selected ← [ A[1] ] <span class="cm">// first activity always chosen</span>', tip:'After sorting, the first activity has the earliest finish — always safe to select it.'},
+  {code:'  lastFinish ← A[1].finish', tip:'Track the finish time of the most recently selected activity.'},
+  {code:'  <span class="kw">for</span> i ← 2 <span class="kw">to</span> n <span class="kw">do</span>:', tip:'Iterate through remaining activities in sorted (finish-time) order.'},
+  {code:'    <span class="kw">if</span> A[i].start ≥ lastFinish <span class="kw">then</span>:', tip:'Compatibility check: does this activity start AFTER the last selected one finishes?'},
+  {code:'      selected.add(A[i]) <span class="cm">// greedy choice!</span>', tip:'GREEDY CHOICE: select this activity. It has the earliest finish among all remaining compatible activities.'},
+  {code:'      lastFinish ← A[i].finish', tip:'Update the frontier: this is now the last selected finish time.'},
+  {code:'    <span class="kw">else</span>: <span class="cm">// A[i].start < lastFinish</span>', tip:'Conflict detected: this activity starts before the last selected one finishes.'},
+  {code:'      <span class="cm">// skip A[i] — it overlaps with selected set</span>', tip:'Reject and move on. This activity cannot be added without creating a conflict.'},
+  {code:'  <span class="kw">return</span> selected <span class="cm">// maximum compatible subset</span>', tip:'Return the optimal set. Greedy guarantees this is maximum — proven by exchange argument.'},
+];
+
+// =====================================================================
+// STATE
+// =====================================================================
+let activities = [...PRESETS[0].activities];
+let steps = [];
+let currentStep = -1;
+let animTimer = null;
+let statusState = 'idle';
+let speedMult = 1;
+let narrateOn = false;
+let stats = {comparisons:0,swaps:0,selected:0,rejected:0};
+let historyAdded = [];
+
+// =====================================================================
+// INIT
+// =====================================================================
+window.addEventListener('load', () => {
+  buildPseudocode();
+  buildPresetGrid();
+  loadPreset(0);
+  drawGrowth();
+  buildOpsTable();
+  window.addEventListener('resize', onResize);
+});
+
+function onResize() {
+  if (steps.length && currentStep >= 0) renderGanttFromStep(steps[currentStep]);
+  else { renderGantt(activities,[],[],null,undefined); renderSortBars(activities,null,null); }
+  if (document.getElementById('tab-clo1').classList.contains('active')) drawGrowth();
+  if (document.getElementById('tab-clo2').classList.contains('active')) {
+    drawHeatmap(activities); runImpact('finish');
+  }
+  if (document.getElementById('tab-clo3').classList.contains('active')) {
+    drawSwapDiagram(); drawCounterExample(); renderWhatIf(activities, null);
+  }
+}
+
+// =====================================================================
+// PSEUDOCODE
+// =====================================================================
+function buildPseudocode() {
+  const b = document.getElementById('pseudo-body');
+  b.innerHTML = PSEUDOCODE.map((l,i) =>
+    `<div class="pseudo-line" id="pl${i}"><span class="ln">${i+1}</span><span class="code">${l.code}</span><div class="pseudo-tooltip">${l.tip}</div></div>`
+  ).join('');
+}
+
+function hlPseudo(idx) {
+  document.querySelectorAll('.pseudo-line').forEach(e=>e.classList.remove('active'));
+  if(idx>=0){const e=document.getElementById(`pl${idx}`);if(e){e.classList.add('active');e.scrollIntoView({block:'nearest',behavior:'smooth'});}}
+}
+
+// =====================================================================
+// PRESET GRID WITH MINI PREVIEWS
+// =====================================================================
+function buildPresetGrid() {
+  const grid = document.getElementById('preset-grid');
+  grid.innerHTML = PRESETS.map((p,i) => {
+    const miniSvg = makeMiniPreview(p.activities);
+    return `<button class="preset-btn" onclick="loadPreset(${i})">
+      ${p.name}<span>${p.desc}</span>
+      <div class="preset-preview">${miniSvg}</div>
+    </button>`;
+  }).join('');
+}
+
+function makeMiniPreview(acts) {
+  const W=170,H=60,PL=4,PR=4,PT=6,ROW=7;
+  const mn=Math.min(...acts.map(a=>a.start));
+  const mx=Math.max(...acts.map(a=>a.finish));
+  const tW=W-PL-PR;
+  function tx(t){return PL+(t-mn)/(mx-mn)*tW;}
+  // Sort by finish for preview
+  const sorted=[...acts].sort((a,b)=>a.finish-b.finish);
+  const sel=new Set(); let lf=-Infinity;
+  sorted.forEach(a=>{if(a.start>=lf){sel.add(a.name);lf=a.finish;}});
+  let html=`<svg width="${W}" height="${H}" style="display:block">`;
+  acts.forEach((a,i)=>{
+    const y=PT+i*ROW;
+    const x1=tx(a.start),x2=tx(a.finish);
+    const c=sel.has(a.name)?'#1a5c3a':'#3a1212';
+    const s=sel.has(a.name)?'#3ddc84':'#ff5c5c';
+    html+=`<rect x="${x1}" y="${y}" width="${Math.max(x2-x1,3)}" height="${ROW-1}" rx="1" fill="${c}" stroke="${s}" stroke-width="0.8"/>`;
+  });
+  html+=`</svg>`;
+  return html;
+}
+
+// =====================================================================
+// INPUT
+// =====================================================================
+function parseInput(text) {
+  return text.trim().split('\n').filter(l=>l.trim()).map(line=>{
+    const p=line.split(',').map(s=>s.trim());
+    if(p.length<3)return null;
+    const s=parseFloat(p[1]),f=parseFloat(p[2]);
+    if(isNaN(s)||isNaN(f)||f<=s)return null;
+    return {name:p[0],start:s,finish:f};
+  }).filter(Boolean);
+}
+
+function loadCustom() {
+  const parsed=parseInput(document.getElementById('custom-input').value);
+  if(!parsed.length){alert('Invalid input. Format: name, start, finish');return;}
+  activities=parsed;
+  resetAnim();
+  renderGantt(activities,[],[],null,undefined);
+  renderSortBars(activities,null,null);
+  drawHeatmap(activities);
+  renderWhatIf(activities,null);
+  setExpl('Activities loaded. Press <strong>Build</strong> to begin.');
+}
+
+function loadPreset(i) {
+  activities=[...PRESETS[i].activities];
+  document.getElementById('custom-input').value=activities.map(a=>`${a.name}, ${a.start}, ${a.finish}`).join('\n');
+  resetAnim();
+  renderGantt(activities,[],[],null,undefined);
+  renderSortBars(activities,null,null);
+  if(document.getElementById('tab-clo2').classList.contains('active'))drawHeatmap(activities);
+  if(document.getElementById('tab-clo3').classList.contains('active'))renderWhatIf(activities,null);
+  setExpl(`Preset <strong>${PRESETS[i].name}</strong> loaded. Press <strong>Build</strong>.`);
+}
+
+// =====================================================================
+// STEP GENERATION
+// =====================================================================
+function buildSteps() {
+  steps=[]; historyAdded=[];
+  stats={comparisons:0,swaps:0,selected:0,rejected:0};
+  updateStats();
+  document.getElementById('history-body').innerHTML='';
+
+  const acts=activities.map((a,i)=>({...a,origIdx:i}));
+  const n=acts.length;
+
+  // Phase announce
+  steps.push({type:'phase',label:'Sort',arr:[...acts],pseudo:1,
+    explanation:`Starting sort of <span class="val">${n}</span> activities by finish time — O(n log n).`,
+    cmp:0,swp:0,sel:0,rej:0,selected:new Set(),rejected:new Set()});
+
+  // Insertion sort (for visualization)
+  let w=[...acts];
+  for(let i=1;i<n;i++){
+    for(let j=i;j>0;j--){
+      stats.comparisons++;
+      steps.push({type:'compare',arr:[...w],i:j,j:j-1,pseudo:1,
+        explanation:`Comparing <span class="val">${w[j].name}</span>(f=<span class="val">${w[j].finish}</span>) with <span class="val">${w[j-1].name}</span>(f=<span class="val">${w[j-1].finish}</span>) — which finishes earlier?`,
+        ...cs(),selected:new Set(),rejected:new Set()});
+      if(w[j].finish<w[j-1].finish){
+        stats.swaps++;
+        [w[j],w[j-1]]=[w[j-1],w[j]];
+        steps.push({type:'swap',arr:[...w],i:j,j:j-1,pseudo:1,
+          explanation:`Swapping <span class="val">${w[j].name}</span> ↔ <span class="val">${w[j-1].name}</span> — finish <span class="val">${w[j].finish}</span> &gt; <span class="val">${w[j-1].finish}</span>`,
+          ...cs(),selected:new Set(),rejected:new Set()});
+      } else break;
+    }
+  }
+
+  steps.push({type:'sorted',arr:[...w],pseudo:2,
+    explanation:`Sort done! Order by finish: <span class="val">${w.map(a=>a.name).join(' → ')}</span>`,
+    ...cs(),selected:new Set(),rejected:new Set()});
+
+  // Greedy
+  steps.push({type:'phase',label:'Greedy',arr:[...w],pseudo:2,
+    explanation:'Phase 2: Greedy selection begins. Scan left to right, pick compatible activities.',
+    ...cs(),selected:new Set(),rejected:new Set()});
+
+  const sel=new Set(),rej=new Set();
+  let lastFinish=w[0].finish,lastSelName=w[0].name;
+  sel.add(w[0].name); stats.selected++;
+  steps.push({type:'select-first',arr:[...w],activity:w[0],lastFinish,pseudo:2,
+    explanation:`Always select first activity <span class="val">${w[0].name}</span> [<span class="val">${w[0].start}</span>,<span class="val">${w[0].finish}</span>] — earliest finish after sorting. lastFinish = <span class="val">${lastFinish}</span>`,
+    ...cs(),selected:new Set(sel),rejected:new Set(rej)});
+
+  for(let i=1;i<n;i++){
+    const act=w[i];
+    stats.comparisons++;
+    steps.push({type:'check',arr:[...w],activity:act,lastFinish,lastSelName,pseudo:5,
+      explanation:`Checking <span class="val">${act.name}</span> [<span class="val">${act.start}</span>,<span class="val">${act.finish}</span>] — is start(<span class="val">${act.start}</span>) ≥ lastFinish(<span class="val">${lastFinish}</span>)?`,
+      ...cs(),selected:new Set(sel),rejected:new Set(rej)});
+
+    if(act.start>=lastFinish){
+      sel.add(act.name); stats.selected++;
+      lastFinish=act.finish; lastSelName=act.name;
+      steps.push({type:'select',arr:[...w],activity:act,lastFinish,pseudo:6,
+        explanation:`✓ <strong>Selected</strong> <span class="val">${act.name}</span>! start(<span class="val">${act.start}</span>) ≥ lastFinish → compatible. New lastFinish = <span class="val">${lastFinish}</span>`,
+        ...cs(),selected:new Set(sel),rejected:new Set(rej)});
+    } else {
+      rej.add(act.name); stats.rejected++;
+      steps.push({type:'reject',arr:[...w],activity:act,lastFinish,lastSelName,pseudo:8,
+        explanation:`✗ <strong>Rejected</strong> <span class="val">${act.name}</span>. start(<span class="val">${act.start}</span>) &lt; lastFinish(<span class="val">${lastFinish}</span>) — overlaps <span class="val">${lastSelName}</span>`,
+        ...cs(),selected:new Set(sel),rejected:new Set(rej)});
+    }
+  }
+
+  steps.push({type:'done',arr:[...w],pseudo:10,
+    explanation:`✓ Done! Selected <span class="val">${sel.size}</span> activities: <span class="val">${[...sel].join(', ')}</span> — this is the maximum compatible set.`,
+    ...cs(),selected:new Set(sel),rejected:new Set(rej)});
+
+  currentStep=-1;
+  setStatusState('ready');
+  document.getElementById('btn-step').disabled=false;
+  document.getElementById('btn-play').disabled=false;
+  document.getElementById('btn-reset').disabled=false;
+  document.getElementById('step-counter').textContent=`Step 0 / ${steps.length}`;
+  renderGantt(activities,[],[],null,undefined);
+  renderSortBars(activities,null,null);
+  setExpl(`<strong>${steps.length} steps</strong> built for ${n} activities. Press Step or Play.`);
+  renderWhatIf(activities,null);
+}
+
+function cs(){return {cmp:stats.comparisons,swp:stats.swaps,sel:stats.selected,rej:stats.rejected};}
+
+// =====================================================================
+// PLAYBACK
+// =====================================================================
+function applyStep(idx){
+  if(idx<0||idx>=steps.length)return;
+  const s=steps[idx];
+  document.getElementById('step-counter').textContent=`Step ${idx+1} / ${steps.length}`;
+  setExpl(s.explanation);
+  hlPseudo(s.pseudo??-1);
+  stats.comparisons=s.cmp??stats.comparisons;
+  stats.swaps=s.swp??stats.swaps;
+  stats.selected=s.sel??stats.selected;
+  stats.rejected=s.rej??stats.rejected;
+  updateStats();
+  renderGanttFromStep(s);
+  renderSortBarsFromStep(s);
+  addHistRow(idx,s);
+  hlHistRow(idx);
+  if(narrateOn) narrate(s.explanation);
+}
+
+function stepForward(){
+  if(currentStep+1>=steps.length){setStatusState('done');return;}
+  currentStep++;
+  applyStep(currentStep);
+  if(currentStep>=steps.length-1)setStatusState('done');
+}
+
+function playAnim(){
+  if(statusState==='done')return;
+  setStatusState('playing');
+  runNext();
+}
+
+function runNext(){
+  if(statusState!=='playing')return;
+  if(currentStep+1>=steps.length){setStatusState('done');return;}
+  currentStep++;
+  applyStep(currentStep);
+  animTimer=setTimeout(runNext,320/speedMult);
+}
+
+function pauseAnim(){clearTimeout(animTimer);setStatusState('paused');}
+
+function resetAnim(){
+  clearTimeout(animTimer);
+  currentStep=-1; steps=[]; historyAdded=[];
+  stats={comparisons:0,swaps:0,selected:0,rejected:0};
+  updateStats();
+  setStatusState('idle');
+  document.getElementById('btn-step').disabled=true;
+  document.getElementById('btn-play').disabled=true;
+  document.getElementById('btn-pause').disabled=true;
+  document.getElementById('step-counter').textContent='Step 0 / 0';
+  hlPseudo(-1);
+  document.getElementById('history-body').innerHTML='';
+  document.getElementById('sort-phase-label').textContent='';
+  document.getElementById('theory-match').style.display='none';
+  renderGantt(activities,[],[],null,undefined);
+  renderSortBars(activities,null,null);
+  setExpl('Reset. Press <strong>Build</strong> to start.');
+}
+
+function updateSpeed(){
+  const v=parseInt(document.getElementById('speed-slider').value);
+  const map=[0.25,0.5,0.75,1,1.25,1.5,2,4];
+  speedMult=map[v-1]??1;
+  document.getElementById('speed-display').textContent=speedMult+'×';
+}
+
+function setStatusState(s){
+  statusState=s;
+  const b=document.getElementById('status-badge');
+  b.textContent=s.charAt(0).toUpperCase()+s.slice(1);
+  b.className=`status-badge status-${s}`;
+  document.getElementById('btn-play').disabled=(s==='playing'||s==='done'||s==='idle');
+  document.getElementById('btn-pause').disabled=(s!=='playing');
+  document.getElementById('btn-step').disabled=(s==='idle'||s==='done'||s==='playing');
+  if(s==='done') showTheoryMatch();
+}
+
+function updateStats(){
+  document.getElementById('stat-comparisons').textContent=stats.comparisons;
+  document.getElementById('stat-swaps').textContent=stats.swaps;
+  document.getElementById('stat-selected').textContent=stats.selected;
+  document.getElementById('stat-rejected').textContent=stats.rejected;
+  const n=activities.length;
+  const theory=Math.round(n*Math.log2(Math.max(n,2)));
+  document.getElementById('stat-theory-cmp').textContent=`theory≈${theory}`;
+  document.getElementById('stat-theory-swp').textContent=`≤${theory} max`;
+}
+
+function showTheoryMatch(){
+  const n=activities.length;
+  const theory=Math.round(n*Math.log2(Math.max(n,2)));
+  const actual=stats.comparisons;
+  const ok=actual<=theory*2;
+  const el=document.getElementById('theory-match');
+  el.style.display='block';
+  el.style.color=ok?'var(--green)':'var(--yellow)';
+  el.textContent=`n=${n} → theory≈${theory} comparisons | actual=${actual} ${ok?'✓ matches O(n log n)':'⚠ check sort impl'}`;
+}
+
+function setExpl(html){
+  const b=document.getElementById('explanation-box');
+  b.innerHTML=html;
+  b.classList.remove('fade-in');
+  void b.offsetWidth;
+  b.classList.add('fade-in');
+}
+
+// =====================================================================
+// NARRATION (Web Speech API)
+// =====================================================================
+function toggleNarrate(){
+  narrateOn=!narrateOn;
+  const btn=document.getElementById('narrate-btn');
+  btn.classList.toggle('on',narrateOn);
+  btn.textContent=narrateOn?'🔊 Narrating…':'🔊 Narrate';
+  if(!narrateOn&&window.speechSynthesis)window.speechSynthesis.cancel();
+}
+
+function narrate(html){
+  if(!narrateOn||!window.speechSynthesis)return;
+  const text=html.replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=1.05; u.pitch=1;
+  window.speechSynthesis.speak(u);
+}
+
+// =====================================================================
+// GANTT RENDERING
+// =====================================================================
+function getRange(acts){
+  return{mn:Math.min(...acts.map(a=>a.start)),mx:Math.max(...acts.map(a=>a.finish))};
+}
+
+function renderGantt(acts,selNames,rejNames,hlName,lastFinish){
+  const svg=document.getElementById('gantt-svg');
+  const W=svg.clientWidth||600;
+  const PL=40,PR=24,PT=14,ROW=26,BAR=16;
+  const {mn,mx}=getRange(acts.length?acts:activities);
+  const tW=W-PL-PR;
+  const H=PT+acts.length*ROW+36;
+  svg.setAttribute('height',H);
+
+  function tx(t){return PL+(t-mn)/(mx-mn)*tW;}
+  let h='';
+
+  // Grid
+  for(let i=0;i<=8;i++){
+    const t=mn+(mx-mn)*i/8,x=tx(t);
+    h+=`<line x1="${x}" y1="${PT}" x2="${x}" y2="${H-26}" stroke="#1e2235" stroke-width="1"/>`;
+    h+=`<text x="${x}" y="${H-9}" text-anchor="middle" fill="#3a4060" font-size="9" font-family="JetBrains Mono">${Math.round(t)}</text>`;
+  }
+
+  // lastFinish line
+  if(lastFinish!==undefined){
+    const x=tx(lastFinish);
+    h+=`<line x1="${x}" y1="${PT}" x2="${x}" y2="${H-26}" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    h+=`<text x="${x+3}" y="${PT+9}" fill="#c084fc" font-size="8.5" font-family="JetBrains Mono">lf=${lastFinish}</text>`;
+  }
+
+  acts.forEach((a,i)=>{
+    const y=PT+i*ROW;
+    const x1=tx(a.start),bw=Math.max(tx(a.finish)-tx(a.start),8);
+    const isSel=selNames&&selNames.includes&&selNames.includes(a.name)||selNames instanceof Set&&selNames.has(a.name);
+    const isRej=rejNames&&rejNames.includes&&rejNames.includes(a.name)||rejNames instanceof Set&&rejNames.has(a.name);
+    const isHL=a.name===hlName;
+    let fill='#252a3d',stroke='#2a2f45',sw=1,op=1;
+    if(isSel){fill='#1a5c3a';stroke='#3ddc84';sw=2;}
+    else if(isRej){fill='#2a1212';stroke='#ff5c5c';sw=1;op=0.6;}
+    else if(isHL){fill='#1a2c4a';stroke='#4f9eff';sw=2;}
+
+    h+=`<g opacity="${op}">`;
+    h+=`<rect x="${x1}" y="${y+(ROW-BAR)/2}" width="${bw}" height="${BAR}" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" style="transition:all 0.22s"/>`;
+    const lbl=`${a.name}[${a.start},${a.finish}]`;
+    if(bw>55){h+=`<text x="${x1+bw/2}" y="${y+ROW/2+4}" text-anchor="middle" fill="#e2e6f0" font-size="9.5" font-family="JetBrains Mono" font-weight="600">${lbl}</text>`;}
+    else{h+=`<text x="${x1+bw+3}" y="${y+ROW/2+4}" fill="#6a7090" font-size="9" font-family="JetBrains Mono">${lbl}</text>`;}
+    if(isSel)h+=`<text x="${x1-3}" y="${y+ROW/2+4}" text-anchor="end" fill="#3ddc84" font-size="11">✓</text>`;
+    if(isRej)h+=`<text x="${x1-3}" y="${y+ROW/2+4}" text-anchor="end" fill="#ff5c5c" font-size="11">✗</text>`;
+    h+=`</g>`;
+  });
+
+  svg.innerHTML=h;
+}
+
+function renderGanttFromStep(s){
+  const acts=s.arr||activities;
+  let sel=s.selected||new Set();
+  let rej=s.rejected||new Set();
+  let hl=null,lf=undefined;
+  if(['check','select','reject','select-first'].includes(s.type)){hl=s.activity?.name;lf=s.lastFinish;}
+  renderGantt(acts,sel,rej,hl,lf);
+  // Sort indicator
+  if(s.type==='sorted'||['check','select','reject','select-first','done','phase'].includes(s.type)){
+    if(s.type!=='phase'||s.label==='Greedy'){
+      const ind=document.getElementById('sort-indicator');
+      ind.innerHTML=`<span style="color:var(--text3)">sorted by finish:</span>`+
+        (s.arr||[]).map(a=>`<span style="color:var(--yellow)">${a.name}(${a.finish})</span>`).join('<span class="sort-arrow">→</span>');
+    }
+  }
+}
+
+// =====================================================================
+// SORT BARS VISUALIZATION
+// =====================================================================
+function renderSortBars(acts,hiI,hiJ){
+  const svg=document.getElementById('sort-bars-svg');
+  const W=svg.clientWidth||600;
+  const n=acts.length;
+  const barW=Math.min(40,(W-20)/n-3);
+  const maxF=Math.max(...acts.map(a=>a.finish));
+  const H=90,PL=10,PT=6,BH=70;
+
+  let h='';
+  acts.forEach((a,i)=>{
+    const x=PL+i*(barW+3);
+    const bh=Math.max((a.finish/maxF)*BH,6);
+    const y=PT+BH-bh;
+    let fill='#2a3050',stroke='#3a4060';
+    if(i===hiI||i===hiJ){fill='#3a2a00';stroke='#ffc94f';}
+    h+=`<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1" style="transition:all 0.2s"/>`;
+    h+=`<text x="${x+barW/2}" y="${H-3}" text-anchor="middle" fill="#555e7a" font-size="8" font-family="JetBrains Mono">${a.name}</text>`;
+    h+=`<text x="${x+barW/2}" y="${y-2}" text-anchor="middle" fill="#ffc94f" font-size="7.5" font-family="JetBrains Mono">${a.finish}</text>`;
+  });
+  svg.setAttribute('height',H);
+  svg.innerHTML=h;
+}
+
+function renderSortBarsFromStep(s){
+  const acts=s.arr||activities;
+  let hi1=null,hi2=null;
+  if(s.type==='compare'||s.type==='swap'){hi1=s.i;hi2=s.j;}
+  renderSortBars(acts,hi1,hi2);
+
+  const lbl=document.getElementById('sort-phase-label');
+  if(s.type==='compare')lbl.textContent=`Comparing pos ${s.i} ↔ ${s.j}`;
+  else if(s.type==='swap')lbl.textContent=`Swapped! pos ${s.i} ↔ ${s.j}`;
+  else if(s.type==='sorted'||s.label==='Greedy')lbl.textContent='Sort complete ✓';
+  else lbl.textContent='';
+}
+
+// =====================================================================
+// HISTORY TABLE
+// =====================================================================
+function addHistRow(idx,s){
+  if(historyAdded[idx])return;
+  historyAdded[idx]=true;
+  const tbody=document.getElementById('history-body');
+  const tr=document.createElement('tr');
+  tr.id=`hr${idx}`;
+  let dec='',dClass='';
+  if(s.type==='select'||s.type==='select-first'){dec='✓ Selected';dClass='cell-sel';}
+  if(s.type==='reject'){dec='✗ Rejected';dClass='cell-rej';}
+  const selStr=s.selected?[...s.selected].join(', '):'';
+  tr.innerHTML=`<td>${idx+1}</td><td>${s.type}</td><td>${s.activity?.name??''}</td><td class="${dClass}">${dec}</td><td style="font-size:.62rem">${selStr}</td>`;
+  tr.onclick=()=>jumpTo(idx);
+  tbody.appendChild(tr);
+  const rows=tbody.querySelectorAll('tr');
+  if(rows.length>28)rows[0].remove();
+  tbody.parentElement.scrollTop=tbody.parentElement.scrollHeight;
+}
+
+function hlHistRow(idx){
+  document.querySelectorAll('.history-table tr').forEach(r=>r.classList.remove('cur'));
+  const r=document.getElementById(`hr${idx}`);
+  if(r)r.classList.add('cur');
+}
+
+function jumpTo(idx){
+  clearTimeout(animTimer);
+  setStatusState('paused');
+  currentStep=idx;
+  applyStep(idx);
+}
+
+// =====================================================================
+// TABS
+// =====================================================================
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if(name==='clo1'){drawGrowth();buildOpsTable();}
+  if(name==='clo2'){runImpact('finish');drawHeatmap(activities);}
+  if(name==='clo3'){drawSwapDiagram();drawCounterExample();renderWhatIf(activities,null);}
+}
+
+function toggleSec(hdr){hdr.parentElement.classList.toggle('open');}
+
+// =====================================================================
+// CLO-1: GROWTH CHART
+// =====================================================================
+function drawGrowth(){
+  const svg=document.getElementById('growth-svg');
+  if(!svg)return;
+  const maxN=parseInt(document.getElementById('growth-n').value);
+  document.getElementById('growth-n-val').textContent=maxN;
+  const cmp=document.getElementById('growth-compare').value;
+  const W=svg.clientWidth||680;
+  const H=240,PL=52,PR=20,PT=12,PB=34;
+  const gW=W-PL-PR,gH=H-PT-PB;
+  const pts=60;
+  const ns=Array.from({length:pts},(_,i)=>Math.max(2,Math.round((i+1)*maxN/pts)));
+  const v1=ns.map(n=>n*Math.log2(n));
+  const v2=ns.map(n=>cmp==='n2'?n*n:cmp==='n'?n:Math.min(Math.pow(2,n),2e8));
+  const maxV=Math.max(...v1,...v2.filter(v=>v<2e8))*1.05;
+  function px(i){return PL+(i/(pts-1))*gW;}
+  function py(v){return PT+gH-Math.min(v/maxV,1)*gH;}
+  let h=`<rect x="${PL}" y="${PT}" width="${gW}" height="${gH}" fill="#0d0f14" rx="5"/>`;
+  for(let i=0;i<=4;i++){
+    const y=PT+i*gH/4,val=maxV*(4-i)/4;
+    h+=`<line x1="${PL}" y1="${y}" x2="${PL+gW}" y2="${y}" stroke="#1e2235" stroke-width="1"/>`;
+    h+=`<text x="${PL-4}" y="${y+4}" text-anchor="end" fill="#3a4060" font-size="8.5" font-family="JetBrains Mono">${val>9999?(val/1000).toFixed(0)+'k':Math.round(val)}</text>`;
+  }
+  for(let i=0;i<=5;i++){
+    const n2=Math.round(maxN*i/5),x=PL+(i/5)*gW;
+    h+=`<text x="${x}" y="${H-5}" text-anchor="middle" fill="#3a4060" font-size="8.5" font-family="JetBrains Mono">${n2}</text>`;
+  }
+  // Area fill for v1
+  let ap=`M${px(0)},${PT+gH} L${px(0)},${py(v1[0])} `;
+  ns.forEach((_,i)=>{if(v1[i]<=maxV)ap+=`L${px(i)},${py(v1[i])} `;});
+  ap+=`L${px(pts-1)},${PT+gH} Z`;
+  h+=`<path d="${ap}" fill="rgba(79,158,255,0.07)"/>`;
+  // Lines
+  let p1='',p2='';
+  ns.forEach((_,i)=>{
+    if(v1[i]<=maxV)p1+=(i===0?'M':'L')+`${px(i)},${py(v1[i])} `;
+    if(v2[i]<=maxV&&v2[i]<2e8)p2+=(p2?'L':'M')+`${px(i)},${py(v2[i])} `;
+  });
+  h+=`<path d="${p1}" fill="none" stroke="#4f9eff" stroke-width="2.5" stroke-linejoin="round"/>`;
+  h+=`<path d="${p2}" fill="none" stroke="#ff5c5c" stroke-width="2" stroke-dasharray="5,3" stroke-linejoin="round"/>`;
+  h+=`<text x="${PL+gW/2}" y="${H}" text-anchor="middle" fill="#555e7a" font-size="9.5" font-family="Syne">n (activities)</text>`;
+  h+=`<text x="10" y="${PT+gH/2}" transform="rotate(-90,10,${PT+gH/2})" text-anchor="middle" fill="#555e7a" font-size="9.5" font-family="Syne">Operations</text>`;
+  svg.setAttribute('height',H);
+  svg.innerHTML=h;
+}
+
+function buildOpsTable(){
+  const tb=document.getElementById('ops-table-body');
+  if(!tb)return;
+  tb.innerHTML=[5,10,20,50,100,500,1000].map(n=>{
+    const s=Math.round(n*Math.log2(n));
+    return `<tr><td>${n}</td><td>≈${s}</td><td>=${n}</td><td>≈${s+n}</td></tr>`;
+  }).join('');
+}
+
+// =====================================================================
+// CLO-2: IMPACT DEMO
+// =====================================================================
+const IMPACT_ACTS=[
+  {name:'A',start:1,finish:4},{name:'B',start:3,finish:5},{name:'C',start:0,finish:6},
+  {name:'D',start:5,finish:7},{name:'E',start:3,finish:9},{name:'F',start:8,finish:11},{name:'G',start:12,finish:16}
+];
+
+function greedyOn(acts){
+  const sel=[];let lf=-Infinity;
+  acts.forEach(a=>{if(a.start>=lf){sel.push(a.name);lf=a.finish;}});
+  return sel;
+}
+
+function runImpact(mode){
+  let sorted;
+  if(mode==='finish')sorted=[...IMPACT_ACTS].sort((a,b)=>a.finish-b.finish);
+  else if(mode==='start')sorted=[...IMPACT_ACTS].sort((a,b)=>a.start-b.start);
+  else if(mode==='duration')sorted=[...IMPACT_ACTS].sort((a,b)=>(a.finish-a.start)-(b.finish-b.start));
+  else sorted=[...IMPACT_ACTS];
+  const sel=new Set(greedyOn(sorted));
+  const svg=document.getElementById('impact-svg');
+  const W=svg.clientWidth||600;
+  const H=260,PL=26,PR=16,PT=50,ROW=25,BAR=15;
+  const {mn,mx}=getRange(sorted);
+  const tW=W-PL-PR;
+  function tx(t){return PL+(t-mn)/(mx-mn)*tW;}
+  const colors={finish:'#3ddc84',start:'#ff5c5c',duration:'#ffc94f',none:'#ff8a4f'};
+  const labels={finish:'Sort by Finish Time ✓',start:'Sort by Start Time ✗',duration:'Sort by Duration ✗',none:'No Sort (Random) ✗'};
+  let h=`<text x="${W/2}" y="20" text-anchor="middle" fill="${colors[mode]}" font-size="12.5" font-family="Syne" font-weight="700">${labels[mode]}</text>`;
+  h+=`<text x="${W/2}" y="38" text-anchor="middle" fill="#8890aa" font-size="10.5" font-family="JetBrains Mono">Result: ${[...sel].join(', ')} (${sel.size} selected)</text>`;
+  for(let i=0;i<=6;i++){
+    const t=mn+(mx-mn)*i/6,x=tx(t);
+    h+=`<line x1="${x}" y1="${PT}" x2="${x}" y2="${PT+sorted.length*ROW}" stroke="#1e2235" stroke-width="0.7"/>`;
+    h+=`<text x="${x}" y="${PT+sorted.length*ROW+12}" text-anchor="middle" fill="#3a4060" font-size="8.5" font-family="JetBrains Mono">${Math.round(t)}</text>`;
+  }
+  sorted.forEach((a,i)=>{
+    const y=PT+i*ROW,x1=tx(a.start),bw=Math.max(tx(a.finish)-tx(a.start),6);
+    const ok=sel.has(a.name);
+    h+=`<rect x="${x1}" y="${y}" width="${bw}" height="${BAR}" rx="2.5" fill="${ok?'#1a5c3a':'#2a1212'}" stroke="${ok?'#3ddc84':'#ff5c5c'}" stroke-width="1.5"/>`;
+    h+=`<text x="${x1+bw/2}" y="${y+BAR/2+3.5}" text-anchor="middle" fill="${ok?'#3ddc84':'#ff5c5c'}" font-size="9" font-family="JetBrains Mono" font-weight="600">${a.name}</text>`;
+  });
+  svg.setAttribute('height',H);svg.innerHTML=h;
+  const msgs={
+    finish:`<strong>Optimal!</strong> Sort by finish time yields <span class="val">${sel.size}</span> activities. This is the <em>maximum</em> possible for this input.`,
+    start:`<strong>Sub-optimal.</strong> Sorting by start time yields only <span class="val">${sel.size}</span> activities — misses better choices that finish earlier.`,
+    duration:`<strong>Sub-optimal.</strong> Sorting by duration yields <span class="val">${sel.size}</span>. A short activity can still block many others if it starts late.`,
+    none:`<strong>Unpredictable.</strong> No sorting yields <span class="val">${sel.size}</span> in this random order — not guaranteed optimal.`
+  };
+  document.getElementById('impact-explanation').innerHTML=msgs[mode];
+}
+
+// =====================================================================
+// CLO-2: CONFLICT HEATMAP
+// =====================================================================
+function drawHeatmap(acts){
+  const svg=document.getElementById('heatmap-svg');
+  if(!svg||!acts.length)return;
+  const n=acts.length;
+  const W=svg.clientWidth||500;
+  const cell=Math.min(Math.floor((W-60)/n),36);
+  const H=60+n*cell;
+  const PL=46,PT=46;
+  let h='';
+  // Column headers
+  acts.forEach((a,j)=>{
+    const x=PL+j*cell+cell/2;
+    h+=`<text x="${x}" y="${PT-6}" text-anchor="middle" fill="#8890aa" font-size="9" font-family="JetBrains Mono" transform="rotate(-40,${x},${PT-6})">${a.name}</text>`;
+  });
+  // Row labels + cells
+  acts.forEach((a,i)=>{
+    const y=PT+i*cell+cell/2;
+    h+=`<text x="${PL-4}" y="${y+4}" text-anchor="end" fill="#8890aa" font-size="9" font-family="JetBrains Mono">${a.name}[${a.start},${a.finish}]</text>`;
+    acts.forEach((b,j)=>{
+      const x=PL+j*cell;
+      const conflict=i!==j&&!(a.finish<=b.start||b.finish<=a.start);
+      const self=i===j;
+      const fill=self?'#2a2f45':conflict?'#3a1212':'#1a3a1a';
+      const stroke=self?'#3a4060':conflict?'#ff5c5c':'#1a5c3a';
+      h+=`<rect x="${x}" y="${PT+i*cell}" width="${cell-1}" height="${cell-1}" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="0.8"/>`;
+      if(!self){h+=`<text x="${x+cell/2}" y="${PT+i*cell+cell/2+4}" text-anchor="middle" fill="${conflict?'#ff5c5c':'#3ddc84'}" font-size="${cell>24?9:7}" font-family="JetBrains Mono">${conflict?'✗':'✓'}</text>`;}
+    });
+  });
+  svg.setAttribute('height',H);
+  svg.innerHTML=h;
+}
+
+// =====================================================================
+// CLO-3: SWAP DIAGRAM
+// =====================================================================
+function drawSwapDiagram(){
+  const svg=document.getElementById('swap-svg');
+  if(!svg)return;
+  const W=svg.clientWidth||600;
+  const H=220,PL=16,sc=(W-90)/20;
+  function tx(t){return PL+t*sc;}
+  let h=`<text x="${W/2}" y="16" text-anchor="middle" fill="#8890aa" font-size="10.5" font-family="JetBrains Mono">Exchange Argument — Why Greedy First Choice is Always Safe</text>`;
+  // A* with a1'
+  h+=`<text x="8" y="42" fill="#c084fc" font-size="10" font-family="Syne" font-weight="700">Optimal A*: contains a₁'[2,8] (not greedy choice):</text>`;
+  [[2,8,'a₁′[2,8]','#c084fc','#3a2050'],[9,12,'a₂[9,12]','#4f9eff','#1a3a5c'],[13,16,'a₃[13,16]','#4f9eff','#1a3a5c']].forEach(([s,f,lbl,stroke,fill])=>{
+    const x1=tx(s),bw=tx(f)-tx(s);
+    h+=`<rect x="${x1}" y="48" width="${bw}" height="17" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
+    h+=`<text x="${x1+bw/2}" y="60" text-anchor="middle" fill="${stroke}" font-size="9.5" font-family="JetBrains Mono">${lbl}</text>`;
+  });
+  h+=`<text x="${tx(20)+4}" y="60" fill="#555e7a" font-size="9" font-family="JetBrains Mono">|A*|=3</text>`;
+  // Greedy a1
+  h+=`<text x="8" y="90" fill="#3ddc84" font-size="10" font-family="Syne" font-weight="700">Greedy a₁[1,5]: finishes earlier than a₁':</text>`;
+  h+=`<rect x="${tx(1)}" y="97" width="${tx(5)-tx(1)}" height="17" rx="3" fill="#1a5c3a" stroke="#3ddc84" stroke-width="2"/>`;
+  h+=`<text x="${(tx(1)+tx(5))/2}" y="109" text-anchor="middle" fill="#3ddc84" font-size="9.5" font-family="JetBrains Mono">a₁[1,5]</text>`;
+  h+=`<text x="${tx(5)+8}" y="109" fill="#3ddc84" font-size="9" font-family="JetBrains Mono">f(a₁)=5 ≤ f(a₁')=8 ✓</text>`;
+  // Arrow
+  h+=`<text x="${W/2}" y="133" text-anchor="middle" fill="#ffc94f" font-size="12.5">↓ swap a₁' ← a₁ in A*</text>`;
+  // A**
+  h+=`<text x="8" y="155" fill="#3ddc84" font-size="10" font-family="Syne" font-weight="700">A** (after swap) — same size, still valid:</text>`;
+  [[1,5,'a₁[1,5]','#3ddc84','#1a5c3a'],[9,12,'a₂[9,12]','#4f9eff','#1a3a5c'],[13,16,'a₃[13,16]','#4f9eff','#1a3a5c']].forEach(([s,f,lbl,stroke,fill])=>{
+    const x1=tx(s),bw=tx(f)-tx(s);
+    h+=`<rect x="${x1}" y="162" width="${bw}" height="17" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
+    h+=`<text x="${x1+bw/2}" y="174" text-anchor="middle" fill="${stroke}" font-size="9.5" font-family="JetBrains Mono">${lbl}</text>`;
+  });
+  h+=`<text x="${tx(20)+4}" y="174" fill="#3ddc84" font-size="9" font-family="JetBrains Mono">|A**|=3 ✓</text>`;
+  h+=`<text x="${W/2}" y="203" text-anchor="middle" fill="#8890aa" font-size="9.5" font-family="JetBrains Mono">f(a₁)=5 ≤ f(a₁')=8 → a₂ starts at 9 ≥ 5 → still compatible ✓ → greedy never worse</text>`;
+  svg.setAttribute('height',H);svg.innerHTML=h;
+}
+
+// =====================================================================
+// CLO-3: COUNTEREXAMPLE
+// =====================================================================
+function drawCounterExample(){
+  const svg=document.getElementById('counter-svg');
+  if(!svg)return;
+  const W=svg.clientWidth||600;
+  const H=200,PL=16,sc=(W-80)/12;
+  function tx(t){return PL+t*sc;}
+  const byStart=[{name:'A',start:1,finish:10},{name:'B',start:2,finish:3},{name:'C',start:4,finish:5}];
+  const byFinish=[{name:'B',start:2,finish:3},{name:'C',start:4,finish:5},{name:'A',start:1,finish:10}];
+  const selStart=new Set(greedyOn(byStart));
+  const selFinish=new Set(greedyOn(byFinish));
+  let h=`<text x="${W/2}" y="15" text-anchor="middle" fill="#ffc94f" font-size="11" font-family="JetBrains Mono">Counterexample: A[1,10], B[2,3], C[4,5]</text>`;
+  h+=`<text x="8" y="35" fill="#ff5c5c" font-size="10" font-family="Syne" font-weight="700">Sort by START TIME → greedy picks A → only 1 activity ✗:</text>`;
+  byStart.forEach(a=>{
+    const ok=selStart.has(a.name),x1=tx(a.start),bw=Math.max(tx(a.finish)-tx(a.start),6);
+    h+=`<rect x="${x1}" y="42" width="${bw}" height="16" rx="2.5" fill="${ok?'#1a5c3a':'#2a1212'}" stroke="${ok?'#3ddc84':'#ff5c5c'}" stroke-width="1.5"/>`;
+    h+=`<text x="${x1+bw/2}" y="54" text-anchor="middle" fill="${ok?'#3ddc84':'#ff5c5c'}" font-size="9" font-family="JetBrains Mono">${a.name}</text>`;
+  });
+  h+=`<line x1="8" y1="74" x2="${W-8}" y2="74" stroke="#2a2f45" stroke-width="1"/>`;
+  h+=`<text x="8" y="94" fill="#3ddc84" font-size="10" font-family="Syne" font-weight="700">Sort by FINISH TIME → picks B, C → 2 activities ✓:</text>`;
+  byFinish.forEach(a=>{
+    const ok=selFinish.has(a.name),x1=tx(a.start),bw=Math.max(tx(a.finish)-tx(a.start),6);
+    h+=`<rect x="${x1}" y="101" width="${bw}" height="16" rx="2.5" fill="${ok?'#1a5c3a':'#2a1212'}" stroke="${ok?'#3ddc84':'#ff5c5c'}" stroke-width="1.5"/>`;
+    h+=`<text x="${x1+bw/2}" y="113" text-anchor="middle" fill="${ok?'#3ddc84':'#ff5c5c'}" font-size="9" font-family="JetBrains Mono">${a.name}</text>`;
+  });
+  h+=`<text x="${W/2}" y="140" text-anchor="middle" fill="#8890aa" font-size="9.5" font-family="JetBrains Mono">A[1,10] is long — choosing it first (sorted by start) blocks everything else.</text>`;
+  h+=`<text x="${W/2}" y="155" text-anchor="middle" fill="#8890aa" font-size="9.5" font-family="JetBrains Mono">Sort by finish time discovers B and C first, maximizing count.</text>`;
+  h+=`<text x="${W/2}" y="172" text-anchor="middle" fill="#ffc94f" font-size="10" font-family="JetBrains Mono">⚠ Wrong sort order: 1 selected. Correct sort order: 2 selected (optimal).</text>`;
+  svg.setAttribute('height',H);svg.innerHTML=h;
+}
+
+// =====================================================================
+// CLO-3: WHAT IF WIDGET
+// =====================================================================
+function renderWhatIf(acts, forcedFirst){
+  const sorted=[...acts].sort((a,b)=>a.finish-b.finish);
+  const container=document.getElementById('whatif-acts');
+  container.innerHTML=sorted.map(a=>{
+    const isGreedy=sorted.indexOf(a)===0;
+    const isForced=forcedFirst&&a.name===forcedFirst.name;
+    let cls='whatif-row';
+    if(isForced)cls+=' forced';
+    if(isGreedy&&!forcedFirst)cls+=' greedy-choice';
+    const tag=isGreedy?'<span style="color:var(--green);font-size:.62rem;margin-left:auto">★ GREEDY</span>':
+              isForced?'<span style="color:var(--orange);font-size:.62rem;margin-left:auto">→ FORCED</span>':'';
+    return `<div class="${cls}" onclick="forceFirst('${a.name}')">
+      <span style="color:var(--accent);min-width:20px">${a.name}</span>
+      <span style="color:var(--text2)">[${a.start}, ${a.finish}]</span>
+      <span style="color:var(--text3);font-size:.62rem">start=${a.start} finish=${a.finish}</span>
+      ${tag}
+    </div>`;
+  }).join('');
+
+  // Draw comparison
+  const greedyResult=greedyOn(sorted);
+  let forcedResult=greedyResult;
+  let forcedNote='';
+  if(forcedFirst){
+    // Run greedy starting with forcedFirst
+    const remaining=sorted.filter(a=>a.name!==forcedFirst.name&&a.start>=forcedFirst.finish);
+    forcedResult=[forcedFirst.name,...greedyOn(remaining)];
+    forcedNote=`Forced: ${forcedFirst.name} [${forcedFirst.start},${forcedFirst.finish}] as first pick`;
+  }
+
+  const svg=document.getElementById('whatif-result-svg');
+  const W=svg.clientWidth||600;
+  const H=200,PL=20,PR=16,PT=36,ROW=24,BAR=14;
+  const {mn,mx}=getRange(acts);
+  const tW=W-PL-PR;
+  function tx(t){return PL+(t-mn)/(mx-mn)*tW;}
+
+  const greedySet=new Set(greedyResult);
+  const forcedSet=new Set(forcedResult);
+
+  let h='';
+  h+=`<text x="8" y="15" fill="#3ddc84" font-size="10.5" font-family="Syne" font-weight="700">Greedy (optimal): ${greedyResult.join(', ')} → ${greedyResult.length} activities</text>`;
+  if(forcedFirst){
+    h+=`<text x="8" y="28" fill="#ff8a4f" font-size="10" font-family="Syne" font-weight="700">Forced: ${forcedNote} → ${forcedResult.length} activities</text>`;
+  }
+
+  // Two rows per activity: greedy row top, forced row bottom
+  sorted.forEach((a,i)=>{
+    const x1=tx(a.start),bw=Math.max(tx(a.finish)-tx(a.start),6);
+    // Greedy
+    const gSel=greedySet.has(a.name);
+    h+=`<rect x="${x1}" y="${PT+i*ROW}" width="${bw}" height="${BAR-2}" rx="2" fill="${gSel?'#1a5c3a':'#252a3d'}" stroke="${gSel?'#3ddc84':'#2a2f45'}" stroke-width="1.2"/>`;
+    if(gSel)h+=`<text x="${x1-3}" y="${PT+i*ROW+10}" text-anchor="end" fill="#3ddc84" font-size="10">✓</text>`;
+    h+=`<text x="${x1+bw/2}" y="${PT+i*ROW+10}" text-anchor="middle" fill="${gSel?'#3ddc84':'#555e7a'}" font-size="8.5" font-family="JetBrains Mono">${a.name}</text>`;
+  });
+
+  if(forcedFirst){
+    const baseline=PT+sorted.length*ROW+10;
+    sorted.forEach((a,i)=>{
+      const x1=tx(a.start),bw=Math.max(tx(a.finish)-tx(a.start),6);
+      const fSel=forcedSet.has(a.name);
+      const isF=a.name===forcedFirst.name;
+      h+=`<rect x="${x1}" y="${baseline+i*ROW}" width="${bw}" height="${BAR-2}" rx="2" fill="${fSel?(isF?'#3a2400':'#1a5c3a'):'#252a3d'}" stroke="${fSel?(isF?'#ff8a4f':'#3ddc84'):'#2a2f45'}" stroke-width="1.2"/>`;
+      if(fSel)h+=`<text x="${x1-3}" y="${baseline+i*ROW+10}" text-anchor="end" fill="${isF?'#ff8a4f':'#3ddc84'}" font-size="10">✓</text>`;
+      h+=`<text x="${x1+bw/2}" y="${baseline+i*ROW+10}" text-anchor="middle" fill="${fSel?'#e2e6f0':'#555e7a'}" font-size="8.5" font-family="JetBrains Mono">${a.name}</text>`;
+    });
+  }
+
+  svg.setAttribute('height',forcedFirst?PT+sorted.length*ROW*2+30:PT+sorted.length*ROW+10);
+  svg.innerHTML=h;
+
+  const expEl=document.getElementById('whatif-explanation');
+  if(!forcedFirst){
+    expEl.innerHTML=`<strong>Greedy optimal:</strong> Selects <span class="val">${greedyResult.length}</span> activities: <span class="val">${greedyResult.join(', ')}</span>. Click any activity above to force it as the first pick and see what happens.`;
+  } else {
+    const diff=greedyResult.length-forcedResult.length;
+    if(diff===0){
+      expEl.innerHTML=`Forcing <span class="val">${forcedFirst.name}</span> first gives <span class="val">${forcedResult.length}</span> activities — <strong style="color:var(--green)">same as greedy</strong>! This confirms the exchange argument: when finish times are equal or very close, alternative first picks can also be optimal.`;
+    } else {
+      expEl.innerHTML=`Forcing <span class="val">${forcedFirst.name}</span> first gives only <span class="val">${forcedResult.length}</span> activities vs greedy's <span class="val">${greedyResult.length}</span>. <strong style="color:var(--red)">That's ${diff} fewer</strong> — the greedy choice (earliest finish) is strictly better here.`;
+    }
+  }
+}
+
+function forceFirst(name){
+  const sorted=[...activities].sort((a,b)=>a.finish-b.finish);
+  const act=sorted.find(a=>a.name===name);
+  if(act)renderWhatIf(activities,act);
+}
+
+// =====================================================================
+// DOWNLOAD PNG (canvas)
+// =====================================================================
+function downloadPNG(){
+  const ganttSvg=document.getElementById('gantt-svg');
+  const svgData=new XMLSerializer().serializeToString(ganttSvg);
+  const canvas=document.createElement('canvas');
+  const W=ganttSvg.clientWidth*2,H=parseInt(ganttSvg.getAttribute('height'))*2;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#0d0f14';ctx.fillRect(0,0,W,H);
+  const img=new Image();
+  const blob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  img.onload=()=>{
+    ctx.drawImage(img,0,0,W,H);
+    const a=document.createElement('a');
+    a.download='activity-selection.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+</script>
+
+<!-- Download PNG button (floating) -->
+<div style="position:fixed;bottom:18px;right:18px;z-index:200;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+  <button class="btn" onclick="downloadPNG()" style="font-size:.66rem;padding:6px 10px;box-shadow:0 2px 12px rgba(0,0,0,.4)">
+    ⬇ Export PNG
+  </button>
+</div>
+
+</body>
+</html>
