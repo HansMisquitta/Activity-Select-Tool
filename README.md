@@ -134,18 +134,3 @@ README.md
 ```
 
 ---
-
-## Screenshots
-
-> *(Add screenshots here after deployment)*
-> 
-> Suggested shots:
-> - Visualizer tab mid-animation (mix of green selected and red rejected bars)
-> - CLO-2 tab showing the four sorting strategies side by side
-> - CLO-3 tab showing the what-if widget with a forced non-greedy pick
-
----
-
-## License
-
-MIT — free to use, modify, and share.
